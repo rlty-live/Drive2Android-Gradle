@@ -1,0 +1,47 @@
+repositories {
+    mavenCentral()
+}
+
+apply plugin: "java"
+apply plugin: "maven-publish"
+
+group = 'com.geronimostudios'
+version = '0.1'
+
+dependencies {
+    compile gradleApi()
+    compile 'org.apache.commons:commons-csv:1.3'
+    compile 'org.jdom:jdom:2.0.2'
+    compile 'com.google.guava:guava:23.0'
+    compile 'com.google.api-client:google-api-client:1.22.0'
+    compile 'com.google.oauth-client:google-oauth-client-jetty:1.22.0'
+    compile 'com.google.apis:google-api-services-drive:v3-rev81-1.22.0'
+    compile 'org.apache.commons:commons-lang3:3.6'
+}
+
+task javadocJar(type: Jar) {
+    classifier = 'javadoc'
+    from javadoc
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            // change to point to your repo, e.g. http://my.org/repo
+            url "$buildDir/repo"
+        }
+    }
+}
