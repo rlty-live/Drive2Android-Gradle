@@ -20,7 +20,9 @@ import org.jdom2.output.XMLOutputter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
@@ -41,10 +43,15 @@ public class ParseHelper {
         int len;
         String key;
         String[] values;
-        HashMap<String, String[]> map = new HashMap<>();
-        Reader reader = new InputStreamReader(new ByteArrayInputStream(file.toByteArray()));
-        Iterable<CSVRecord> records = CSVFormat.RFC4180.parse(reader);
-        CSVRecord header = Iterables.get(records, 0);
+        HashMap<String, String[]> map;
+        Reader reader;
+        Iterable<CSVRecord> records;
+        CSVRecord header;
+
+        map = new HashMap<>();
+        reader = new InputStreamReader(new ByteArrayInputStream(file.toByteArray()));
+        records = CSVFormat.RFC4180.parse(reader);
+        header = Iterables.get(records, 0);
         len = header.size() - 1;
         mCSVHeader = parseHeader(header);
         for (CSVRecord record : records) {
@@ -90,12 +97,16 @@ public class ParseHelper {
                 }
             }
         }
+        echoMap(map);
         return map;
     }
 
     private static String[] filesToStrings(File[] filesList) {
-        String[] res = new String[filesList.length];
-        int cpt = 0;
+        String[] res;
+        int cpt;
+
+        res = new String[filesList.length];
+        cpt = 0;
         for (File f : filesList) {
             res[cpt] = f.getParentFile().getName();
             cpt++;
@@ -108,7 +119,9 @@ public class ParseHelper {
     }
 
     private static String[] csvRecordsToStrings(CSVRecord record) {
-        String[] res = new String[record.size() - 1];
+        String[] res;
+
+        res = new String[record.size() - 1];
         for (int cpt = 0; cpt < record.size() - 1; cpt++) {
             if (record.get(cpt + 1).contains(File.separator)) {
                 throw new SecurityException("Invalid file name : " + record.get(cpt + 1));
@@ -129,11 +142,15 @@ public class ParseHelper {
         Attribute att;
         File output;
         String value;
-        Format format = Format.getPrettyFormat();
-        format.setEncoding("UTF-8");
-        XMLOutputter writer = new XMLOutputter(format);
-        Document[] docs = new Document[mCSVHeader.size()];
+        String path;
+        Format format;
+        XMLOutputter writer;
+        Document[] docs;
 
+        format = Format.getPrettyFormat();
+        format.setEncoding("UTF-8");
+        writer = new XMLOutputter(format);
+        docs = new Document[mCSVHeader.size()];
         for (int i = 0; i < docs.length; i++) {
             tmp = new Element(ROOT_ELEMENT);
             docs[i] = new Document(tmp);
@@ -156,7 +173,7 @@ public class ParseHelper {
             }
         }
         for (int i = 0; i < docs.length; i++) {
-            String path = d2a.getResPath()
+            path = d2a.getResPath()
                     + File.separator + mCSVHeader.getValue(i);
             output = new File(path);
             output.mkdirs();
@@ -172,17 +189,22 @@ public class ParseHelper {
 
     public static File[] getStringFiles(Drive2AndroidExtension d2a) throws IOException {
         File[] res;
-        ArrayList<File> tmp = new ArrayList<>();
-        File folder = new File(d2a.getResPath());
-        File[] subfolder = folder.listFiles();
-        if (subfolder == null) {
-            throw new IOException("No folder in resource found");
+        File[] files;
+        File[] subfolder;
+        ArrayList<File> tmp;
+        File folder;
+
+        tmp = new ArrayList<>();
+        folder = new File(d2a.getResPath());
+        subfolder = folder.listFiles((dir, name) -> name.contains("values"));
+        if (subfolder == null || subfolder.length == 0) {
+            return null;
         }
+        System.out.println(subfolder.length);
         for (File f : subfolder) {
-            if (f.getName().contains("values")) {
-                tmp.add(new File(
-                        f.getPath() + File.separator + d2a.getStringFileName()
-                ));
+            files = f.listFiles((dir, name) -> name.equals(d2a.getStringFileName()));
+            if (files != null && files.length != 0) {
+                tmp.add(files[0]);
             }
         }
         res = new File[tmp.size()];
@@ -191,8 +213,10 @@ public class ParseHelper {
 
     @SuppressWarnings("deprecation")
     private static String mapFormat(HashMap<String, String[]> map) {
-        String res = "";
         int len;
+        String res;
+
+        res = "";
         for (Map.Entry<String, String[]> entry : map.entrySet()) {
             res += StringEscapeUtils.escapeCsv(entry.getKey()) + ",";
             len = entry.getValue().length - 1;
@@ -209,15 +233,18 @@ public class ParseHelper {
     public static void upload(HashMap<String, String[]> map, Drive2AndroidExtension d2a)
             throws IOException
     {
+        byte[] filePath;
         String out;
+        ByteArrayContent mediaContent;
+        com.google.api.services.drive.model.File fileMetadata;
 
-        com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
+        fileMetadata = new com.google.api.services.drive.model.File();
         fileMetadata.setMimeType("application/vnd.google-apps.spreadsheet");
         out = mCSVHeader.format();
         out += mapFormat(map);
         System.out.println(out);
-        byte[] filePath = out.getBytes("UTF-8");
-        ByteArrayContent mediaContent = new ByteArrayContent("text/csv", filePath);
+        filePath = out.getBytes("UTF-8");
+        mediaContent = new ByteArrayContent("text/csv", filePath);
         d2a.getDrive().files().update(d2a.getFileId(), fileMetadata, mediaContent).execute();
     }
 }

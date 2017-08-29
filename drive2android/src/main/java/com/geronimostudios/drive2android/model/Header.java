@@ -33,8 +33,9 @@ public class Header {
 
     @SuppressWarnings("deprecation")
     public String format() {
-        String res = "key,";
+        String res;
 
+        res = "key,";
         for (int i = 0; i < mNamesValues.size() - 1; i++) {
             res += StringEscapeUtils.escapeCsv(mNamesValues.get(i)) + ",";
         }
