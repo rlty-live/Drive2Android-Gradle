@@ -153,7 +153,7 @@ bintray {
     publications = ['mavenJava']
     pkg {
         repo = 'geronimostudios'
-        name = 'drive2android'
+        name = 'com.geronimostudios.drive2android'
         userOrg = 'geronimostudios'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/geronimoagency/Drive2android-Android.git'
