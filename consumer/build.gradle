@@ -6,11 +6,11 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "com.geronimostudios:drive2android:0.1"
+        classpath "com.geronimostudios.drive2android:drive2android:0.1"
     }
 }
 
-apply plugin: "drive2android"
+apply plugin: "com.geronimostudios.drive2android"
 
 Properties properties = new Properties();
 properties.load(project.file("drive2android/drive2android.properties").newDataInputStream())
