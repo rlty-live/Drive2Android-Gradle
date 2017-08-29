@@ -3,3 +3,4 @@ build
 *.ipr
 *.iml
 *.iws
+android2drive.properties

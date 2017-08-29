@@ -16,3 +16,5 @@ gradle-app.setting
 local.properties
 .idea
 client_secret.json
+*.iml
+gradle.properties

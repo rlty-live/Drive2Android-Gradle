@@ -2,11 +2,25 @@ repositories {
     mavenCentral()
 }
 
-apply plugin: "java"
-apply plugin: "maven-publish"
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jfrog.buildinfo:build-info-extractor-gradle:3.1.1"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:1.3"
+    }
+}
 
-group = 'com.geronimostudios'
-version = '0.1'
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'com.jfrog.bintray'
+
+group = 'com.geronimostudios.drive2android'
+String currentVersion = '0.1'
+version = currentVersion
 
 dependencies {
     compile gradleApi()
@@ -19,16 +33,7 @@ dependencies {
     compile 'org.apache.commons:commons-lang3:3.6'
 }
 
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allSource
-    classifier = 'sources'
-}
-
+/*
 publishing {
     publications {
         maven(MavenPublication) {
@@ -42,6 +47,129 @@ publishing {
         maven {
             // change to point to your repo, e.g. http://my.org/repo
             url "$buildDir/repo"
+        }
+    }
+}
+*/
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from 'build/docs/javadoc'
+}
+
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier = 'sources'
+}
+
+//jar.dependsOn sourcesJar
+
+def pomConfig = {
+    name 'Drive2Android'
+    description 'Gradle plugin to import or export from Google Drive to Android'
+    url 'https://github.com/geronimoagency/Drive2Android-Gradle'
+
+    licenses {
+        license {
+            name 'The Apache Software License, Version 2.0'
+            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            distribution 'repo'
+        }
+    }
+    scm {
+        connection 'https://github.com/geronimoagency/Drive2Android-Gradle.git'
+        url 'https://github.com/geronimoagency/Drive2Android-Android'
+    }
+    developers {
+        developer {
+            id 'jeromec-geronimo'
+            name 'Jérôme Caudoux'
+            email 'jerome.c@geronimostudios.com'
+        }
+
+        developer {
+            id 'tperraut-geronimo'
+            name 'Thomas Perraut'
+            email 'thomas.p@geronimostudios.com'
+        }
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+
+            pom.withXml {
+                def root = asNode()
+                root.appendNode('description', 'Gradle plugin to import or export from Google Drive to Android')
+                root.children().last() + pomConfig
+            }
+        }
+    }
+}
+
+task createReleasePropertiesFile(type:Exec) {
+    String fileName = 'bintray.drive2android.release.properties'
+    println 'Creating $fileName'
+    String fileContent = "version=$currentVersion"
+    (new File("$projectDir/src/main/resources/$fileName")).write(fileContent)
+}
+
+Properties config = new Properties()
+config.load(project.file('android2drive.properties').newDataInputStream())
+
+artifactory {
+    contextUrl = 'https://oss.jfrog.org'
+    resolve {
+        repository {
+            repoKey = 'libs-release'
+        }
+    }
+    publish {
+        repository {
+            repoKey = 'oss-snapshot-local' //The Artifactory repository key to publish to
+            //when using oss.jfrog.org the credentials are from Bintray. For local build we expect them to be found in
+            //~/.gradle/gradle.properties, otherwise to be set in the build server
+            username = config.getProperty("bintray.user")
+            password = config.getProperty("bintray.apikey")
+        }
+        defaults {
+            publications 'mavenJava'
+            properties = ['bintray.repo': 'jfrog/jfrog-jars', 'bintray.package': 'gradle-bintray-plugin', 'bintray.version': version.toString()]
+        }
+    }
+}
+
+bintray {
+    user = config.getProperty("bintray.user")
+    key = config.getProperty("bintray.apikey")
+
+    dryRun = false //[Default: false] Whether to run this as dry-run, without deploying
+    publish = true //[Default: false] Whether version should be auto published after an upload
+
+    publications = ['mavenJava']
+    pkg {
+        repo = 'geronimostudios'
+        name = 'drive2android'
+        userOrg = 'geronimostudios'
+        licenses = ['Apache-2.0']
+        vcsUrl = 'https://github.com/geronimoagency/Drive2android-Android.git'
+        issueTrackerUrl = 'https://github.com/geronimoagency/Drive2android-Gradle/issues'
+        websiteUrl = 'http://www.geronimo-agency.com'
+        labels = ['android', 'gradle', 'strings', 'drive', 'google', 'import', 'export']
+        publicDownloadNumbers = true
+        version {
+            vcsTag = currentVersion
+            name = currentVersion
+            desc = 'Gradle plugin to import or export from Google Drive to Android'
+
+            gpg {
+                sign = true //Determines whether to GPG sign the files. The default is false
+                passphrase = config.getProperty("bintray.gpg.passphrase") // The passphrase for GPG signing'
+            }
         }
     }
 }

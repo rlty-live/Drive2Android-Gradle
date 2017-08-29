@@ -12,11 +12,11 @@ buildscript {
 
 apply plugin: "drive2android"
 
-Properties prop = new Properties();
-prop.load(project.file("drive2android/lang.properties").newDataInputStream())
+Properties properties = new Properties();
+properties.load(project.file("drive2android/drive2android.properties").newDataInputStream())
 drive2android {
-    fileId = prop.getProperty("lang.fileId")
-    resPath = prop.getProperty("lang.resPath")
-    clientSecret = prop.getProperty("lang.clientSecretPath")
-    stringFileName = prop.getProperty("lang.stringFileName")
+    fileId = properties.getProperty("fileId")
+    resPath = properties.getProperty("resPath")
+    clientSecret = properties.getProperty("clientSecretPath")
+    stringFileName = properties.getProperty("stringFileName")
 }
