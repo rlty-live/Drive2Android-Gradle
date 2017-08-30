@@ -10,8 +10,7 @@ In the gradle of your application (app/build.gradle), add the followings line at
 ```gradle
 buildscript {
     repositories {
-        maven { url 'http://dl.bintray.com/geronimostudios/geronimostudios' }
-        mavenCentral()
+        jcenter()
     }
 
     dependencies {
