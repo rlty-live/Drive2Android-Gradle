@@ -1,10 +1,11 @@
 package com.geronimostudios.drive2android.tasks;
 
-import org.gradle.api.DefaultTask;
-import org.gradle.api.tasks.TaskAction;
 import com.geronimostudios.drive2android.Drive2AndroidExtension;
 import com.geronimostudios.drive2android.core.ParseHelper;
-import org.jdom2.JDOMException;
+
+import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.TaskAction;
+import org.jdom.JDOMException;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -20,6 +21,7 @@ public class ImportTask extends DefaultTask {
         File[] fileList;
         Drive2AndroidExtension d2a;
         ByteArrayOutputStream outputStream;
+        ParseHelper parser = new ParseHelper();
 
         d2a = (Drive2AndroidExtension)getProject()
                 .getExtensions()
@@ -27,11 +29,11 @@ public class ImportTask extends DefaultTask {
         outputStream = new ByteArrayOutputStream();
         d2a.getDrive().files().export(d2a.getFileId(), "text/csv")
                 .executeMediaAndDownloadTo(outputStream);
-        fileList = ParseHelper.getStringFiles(d2a);
-        input = ParseHelper.CSVtoMap(outputStream);
-        output = ParseHelper.XMLtoMAP(fileList);
+        fileList = parser.getStringFiles(d2a);
+        input = parser.CSVtoMap(outputStream);
+        output = parser.XMLtoMAP(fileList);
         output.putAll(input);
-        ParseHelper.write(output, d2a);
+        parser.write(output, d2a);
     }
 
 }

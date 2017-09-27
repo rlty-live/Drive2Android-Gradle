@@ -15,6 +15,7 @@ gradle-app.setting
 
 local.properties
 .idea
-client_secret.json
+consumer/drive2android/client_secret.json
 *.iml
 gradle.properties
+*.py
