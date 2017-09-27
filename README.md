@@ -14,7 +14,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.geronimostudios.drive2android:drive2android:0.1'
+        classpath 'com.geronimostudios.drive2android:drive2android:0.2'
     }
 }
 
