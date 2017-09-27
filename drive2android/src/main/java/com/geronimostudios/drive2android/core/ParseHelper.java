@@ -93,7 +93,8 @@ public class ParseHelper {
                 String value = new XMLOutputter()
                         .outputString(string)
                         .replace("</string>", "")
-                        .replace("<string name=\"" + key + "\">", "");
+                        .replace("<string name=\"" + key + "\">", "")
+                        .replace("<string name=\"" + key + "\" formatted=\"false\">", "");
 
                 if (values == null) {
                     values = new String[langNumber];

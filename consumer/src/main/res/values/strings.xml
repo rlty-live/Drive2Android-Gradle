@@ -2,5 +2,7 @@
 <resources>
   <string name="app_name">Drive2Android <u>underlined <b>bold</b></u> <u>underlined</u> <u>underlined <i>italic</i></u> end</string>
   <string name="format_test" formatted="false">Drive2Android %s %d€ %d%%</string>
+
+  <string name="view_simulation_summary_arbitration" formatted="false">• Pack %d arbitrages par an</string>
 </resources>
 
